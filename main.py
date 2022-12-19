@@ -1,63 +1,79 @@
 import os
 import time
+import shutil
+import tkinter as tk
 
-big_ver = "1"
-mini_ver = ".1.0"
-version = "(" + big_ver + mini_ver + ")"
+class App(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("GD Optimizer")
+        self.geometry("500x500")
 
-"""
-Priority Level Value	Priority Level Name
+        self.version = tk.StringVar()
+        self.version.set("(1.1.0)")
+        self.label_version = tk.Label(self, textvariable=self.version)
+        self.label_version.pack()
 
-256	                    Realtime
-128	                    High
-32768	                Above normal
-32	                    Normal
-16384	                Below normal
-64	                    Low
-"""
+        self.button_optimize = tk.Button(self, text="Optimize", command=self.optimize)
+        self.button_optimize.pack()
 
-# sets these processes to their respective priorities
-low = ["Discord.exe", "steamwebhelper.exe", "firefox.exe", "chrome.exe"]
-normal = []
-high = []
-real = ["GeometryDash.exe"]
+ 
+        self.button_clean = tk.Button(self, text="Clean Temp", command=self.clean_temp)
+        self.button_clean.pack()
 
-def lowpriority():
-    for i in low:
-        process_change = 'wmic process where name="' + i + '" CALL setpriority "64"'
-        print(process_change)
-        os.system(process_change)
-        os.system('cls')
+        self.status = tk.StringVar()
+        self.label_status = tk.Label(self, textvariable=self.status)
+        self.label_status.pack()
 
-def normalpriority():
-    for i in normal:
-        process_change = 'wmic process where name="' + i + '" CALL setpriority "32"'
-        print(process_change)
-        os.system(process_change)
-        os.system('cls')
+        self.low = ["Discord.exe", "steamwebhelper.exe", "firefox.exe", "chrome.exe", "Spotify.exe", "MsMpEng.exe", "brave.exe", "WSHelper.exe"]
+        self.normal = []
+        self.high = []
+        self.real = ["GeometryDash.exe"]
 
-def highpriority():
-    for i in high:
-        process_change = 'wmic process where name="' + i + '" CALL setpriority "128"'
-        print(process_change)
-        os.system(process_change)
-        os.system('cls')
+    def optimize(self):
+        self.status.set("Setting process priorities...")
+        self.realpriority()
+        self.lowpriority()
+        self.status.set("All processes set correctly. Make Sure To Re Run This Everytime You Get In A Call")
 
-def realpriority(): # sets to high for some reason lmfao
-    for i in real:
-        process_change = 'wmic process where name="' + i + '" CALL setpriority "256"'
-        print(process_change)
-        os.system(process_change)
-        os.system('cls')
+    def realpriority(self):
+        for i in self.real:
+            process_change = 'wmic process where name="' + i + '" CALL setpriority "256"'
+            os.system(process_change)
 
-def process():
-    realpriority()
-    #highpriority()
-    #normalpriority()
-    lowpriority()
-    return("All processes set correctly.")
+    def lowpriority(self):
+        for i in self.low:
+            process_change = 'wmic process where name="' + i + '" CALL setpriority "64"'
+            os.system(process_change)
 
-print("\033[1;37;40mGD Optimizer Version", version , "\n\033[1;31;40mWarning: You will need to relaunch \nthis everytime you open GD, or join a new discord call.", "\033[1;37;40m\n" + process())
-time.sleep(1)
-print("Closing in 5 seconds...")
-time.sleep(5)
+    def clean_temp(self):
+        self.status.set("Running Temp Cleaner...")
+
+        folder = f'C:/Users/{os.getlogin()}/AppData/Local/Temp'
+
+        delete_file_count = 0
+        delete_folder_count = 0
+
+        for the_file in os.listdir(folder):
+            file_path = os.path.join(folder, the_file)
+            index_no = file_path.find('\\')
+            item_name = file_path[index_no+1:]
+            try:
+                if os.path.isfile(file_path):
+                    os.unlink(file_path)
+                    delete_file_count += 1
+
+                elif os.path.isdir(file_path):
+                    if file_path.__contains__('chocolatey'):
+                                           continue
+                    shutil.rmtree(file_path)
+                    delete_folder_count += 1
+            except Exception as e:
+                self.status.set(f'Access Denied: {item_name}')
+
+        self.status.set(f'{delete_file_count} files and {delete_folder_count} folders deleted.')
+
+if __name__ == "__main__":
+    app = App()
+    app.mainloop()
+
